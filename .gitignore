@@ -1,0 +1,41 @@
+# Python virtual environment
+.venv/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+
+# Large binary files — track with Git LFS instead if needed
+data/input/*.mp4
+data/input/*.avi
+data/input/*.mkv
+data/output/*.mp4
+data/output/*.avi
+
+# Nsight binary reports — too large for git, open locally
+nsight_reports/*.nsys-rep
+nsight_reports/*.ncu-rep
+nsight_reports/*.sqlite
+
+# Keep the folders themselves (git doesn't track empty folders)
+!data/input/.gitkeep
+!data/output/.gitkeep
+!nsight_reports/.gitkeep
+
+# PyTorch checkpoints
+*.pt
+*.pth
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Editor folders
+.vscode/
+.idea/
+
+# Environment variables (never commit secrets)
+.env
