@@ -1,0 +1,23 @@
+# Pipeline parameters
+pipeline:
+  batch_size: 4
+  inference_size: [224, 224]   # model input size (height, width)
+
+# Input / output
+data:
+  input_video: "data/input/sample.mp4"
+  output_dir: "data/output"
+
+# Profiling
+profiling:
+  nsight_reports_dir: "nsight_reports"
+  warmup_batches: 2            # batches to run before timing starts
+
+# Model
+model:
+  target_class: "cat"          # what to segment
+
+# Preprocessing normalization (ImageNet standard)
+normalize:
+  mean: [0.485, 0.456, 0.406]
+  std:  [0.229, 0.224, 0.225]
