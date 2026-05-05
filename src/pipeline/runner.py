@@ -37,6 +37,12 @@ from src.inference.segmentation import Segmentation
 from src.utils.timer import PipelineTimer
 from src.utils.config import Config
 
+try:
+    import torch.cuda.nvtx as nvtx
+    NVTX_AVAILABLE = True
+except ImportError:
+    NVTX_AVAILABLE = False
+
 
 class PipelineRunner:
     """
@@ -145,39 +151,35 @@ class PipelineRunner:
 
             while True:
 
-                # --------------------------------------------------------
                 # Stage 1: Decode
-                # --------------------------------------------------------
+                if NVTX_AVAILABLE: nvtx.range_push("decode")
                 timer.decode.start()
                 batch = decoder()
                 timer.decode.stop()
+                if NVTX_AVAILABLE: nvtx.range_pop()
 
                 if batch is None:
-                    break   # video exhausted
+                    break
 
-                # --------------------------------------------------------
                 # Stage 2: Preprocess
-                # --------------------------------------------------------
+                if NVTX_AVAILABLE: nvtx.range_push("preprocess")
                 timer.preprocess.start()
                 orig_tensor, resized_tensor, normalized_tensor = (
                     self.preprocessor(batch.frame, self.inference_size)
                 )
                 timer.preprocess.stop()
+                if NVTX_AVAILABLE: nvtx.range_pop()
 
-                # --------------------------------------------------------
                 # Stage 3: Inference
-                # --------------------------------------------------------
+                if NVTX_AVAILABLE: nvtx.range_push("inference")
                 timer.inference.start()
                 probabilities = model(normalized_tensor)
-                # Synchronize GPU so timer captures real inference time
-                # Without this, CUDA queues the work asynchronously and
-                # timer.stop() fires before the GPU is actually done
                 torch.cuda.synchronize()
                 timer.inference.stop()
+                if NVTX_AVAILABLE: nvtx.range_pop()
 
-                # --------------------------------------------------------
                 # Stage 4: Postprocess
-                # --------------------------------------------------------
+                if NVTX_AVAILABLE: nvtx.range_push("postprocess")
                 timer.postprocess.start()
                 processed_frames = self.postprocessor(
                     probabilities,
@@ -186,14 +188,15 @@ class PipelineRunner:
                     model.class_index,
                 )
                 timer.postprocess.stop()
+                if NVTX_AVAILABLE: nvtx.range_pop()
 
-                # --------------------------------------------------------
                 # Stage 5: Encode
-                # --------------------------------------------------------
+                if NVTX_AVAILABLE: nvtx.range_push("encode")
                 timer.encode.start()
                 batch.frame = processed_frames
                 encoder(batch)
                 timer.encode.stop()
+                if NVTX_AVAILABLE: nvtx.range_pop()
 
                 # --------------------------------------------------------
                 # Warmup handling — reset timers after warmup batches
